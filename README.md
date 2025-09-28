@@ -5,17 +5,21 @@ It includes a VPC, subnets, Internet Gateway, NAT Gateway, route tables, securit
 Everything is configured to run in AWS.
 
 ---
+```
 
 ## 📂 Project Structure
 .
-├── dynamodb.tf         # DynamoDB table for state locking
+├── Dynamodb.tf         # DynamoDB table for state locking
 ├── backend.tf          # Remote state config (S3 + DynamoDB), NAT, route tables
 ├── ec2.tf              # Bastion EC2 instance in public subnet, Bastion, Web, App, DB
 ├── outputs.tf          # Outputs (VPC ID, Bastion IP, SGs, etc.)
 ├── provider.tf         # Provider configuration (AWS region, credentials, etc.)
-├── security_groups.tf  # Security groups
+├── security_grp.tf  # Security groups
 ├── variables.tf        # Input variables
 └── vpc.tf              # VPC, subnets, IGW
+
+```
+---
 
 
 ## ⚙️ Prerequisites
