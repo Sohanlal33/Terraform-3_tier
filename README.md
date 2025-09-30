@@ -1,25 +1,31 @@
-# 3-Tier AWS Infrastructure with Terraform
+# 🚀 Terraform 3-Tier AWS Infrastructure
 
-This project provisions a basic 3-tier AWS infrastructure using Terraform.  
-It includes a VPC, subnets, Internet Gateway, NAT Gateway, route tables, security groups, and a Bastion EC2 instance.  
-Everything is configured to run in AWS.
+This repository provisions a **modular, production-ready 3-tier architecture on AWS** using **Terraform**.  
+The setup includes **VPC, Subnets, Bastion Host, Web/App EC2, Auto Scaling, RDS, and ALB** — all together .
 
 ---
-```
 
 ## 📂 Project Structure
+```bash
 .
-├── Dynamodb.tf         # DynamoDB table for state locking
-├── backend.tf          # Remote state config (S3 + DynamoDB), NAT, route tables
-├── ec2.tf              # Bastion EC2 instance in public subnet, Bastion, Web, App, DB
-├── outputs.tf          # Outputs (VPC ID, Bastion IP, SGs, etc.)
-├── provider.tf         # Provider configuration (AWS region, credentials, etc.)
-├── security_grp.tf  # Security groups
-├── variables.tf        # Input variables
-└── vpc.tf              # VPC, subnets, IGW
+├── backend.tf          # Remote state backend (S3 + DynamoDB)
+├── dynamodb.tf         # DynamoDB table for state locking
+├── main.tf             # Root configuration calling all modules
+├── outputs.tf          # Global outputs (Bastion IP, VPC ID, etc.)
+├── provider.tf         # AWS provider configuration
+├── variables.tf        # Input variables (region, CIDRs, AMIs, tags)
+├── userdata/           # User data scripts for EC2
+│   ├── app-tier-user-data.sh
+│   └── web-tier-user-data.sh
+└── modules/            # Modularized Terraform resources
+    ├── vpc/            # VPC, subnets, IGW, NAT, route tables
+    ├── ec2/            # Bastion, Web, and App EC2 + launch templates
+    ├── alb/            # Application Load Balancer + Target Groups
+    ├── asg/            # Auto Scaling Groups for Web/App tiers
+    ├── rds/            # RDS MySQL Database (private subnets)
+    ├── iam/            # IAM roles & instance profiles
+    └── s3/             # S3 bucket for state/logs/other storage
 
-```
----
 
 
 ## ⚙️ Prerequisites
@@ -33,6 +39,24 @@ Everything is configured to run in AWS.
    If not, the Terraform code will create them for you.
 
 ---
+🔑 Update Before Running
+
+You must update these variables in variables.tf
+
+| Variable           | Description                   | Example                   |
+| ------------------ | ----------------------------- | ------------------------- |
+| `bastion_key_name` | SSH key pair name for Bastion | `"my-key"`                |
+| `bastion_ami`      | AMI ID for Bastion host       | `"ami-0abcdef1234567890"` |
+| `app_ami`          | AMI ID for App servers        | `"ami-0abcdef1234567890"` |
+| `web_ami`          | AMI ID for Web servers        | `"ami-0abcdef1234567890"` |
+| `rds_password`     | Master password for RDS       | `"StrongPassword123!"`    |
+
+📌 User Data Scripts:
+
+Update userdata/web-tier-user-data.sh for web tier setup (e.g., Nginx/Apache)
+
+Update userdata/app-tier-user-data.sh for application tier setup (e.g., Spring Boot, Node.js)
+
 
 ## 🚀 How to Run
 
@@ -61,54 +85,26 @@ Everything is configured to run in AWS.
    ```bash
    terraform apply -auto-approve
    ```
+📤 Outputs
+
+After apply, Terraform will display:
+
+✅ Bastion Host Public IP
+
+✅ VPC ID
+
+✅ Subnet IDs
+
+✅ Load Balancer DNS
+
+✅ NAT Gateway IP
+
+✅ RDS Endpoint
 
 6. Destroy when done:
    ```bash
    terraform destroy -auto-approve
    ```
-
----
-
-## 🔑 Notes
-
-- **AMI ID** → Update inside `ec2.tf` before applying.  
-  Use the latest Amazon Linux 2 AMI for your region. 
-  Example command:
-  ```bash
-  aws ec2 describe-images \
-    --owners amazon \
-    --filters "Name=name,Values=amzn2-ami-hvm-*-x86_64-gp2" \
-    --query "Images[*].[ImageId,Name]" \
-    --region ap-south-1 \
-    --output table
-  ```
-
-- **Key Pair** → Use your own AWS key pair for the Bastion EC2 instance.  
-  Update in `ec2.tf`:
-  ```hcl
-  key_name = "<your-key-name>"
-  ```
-
-  - This setup is only networking + Bastion EC2, safe for free-tier.
-
----
-
-
-## 📌 DynamoDB for State Locking
-
-Terraform uses DynamoDB to store state/simultaneous updates.  
-
-This table ensures only one `terraform apply` runs at a time.
-
----
-
-## 📤 Outputs
-
-After apply, you will see:
-
-- **Bastion Host Public IP**
-- **nat_ip**
-
 ---
 
 ## 🧹 Cleanup
@@ -121,4 +117,19 @@ This avoids any extra AWS costs.
 
 ---
 
-✅ With this setup, anyone checking your repo can **clone → add AMI ID + key → run terraform → get Bastion EC2 + infra** like a real project.
+✅ Highlights
+
+🔒 Uses DynamoDB for state locking (safe in team environments)
+
+📦 Modular design → reusable in other projects
+
+🌍 Multi-tier networking (public, private-web, private-app, private-db)
+
+📊 Scalable with Auto Scaling Groups + ALB
+
+🛡️ Security-first: Bastion in public subnet, workloads in private
+
+🙌 Contribution
+
+Fork, modify, and reuse this module for your own projects.
+PRs welcome to improve best practices or extend functionality.
